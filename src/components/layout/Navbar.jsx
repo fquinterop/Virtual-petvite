@@ -3,13 +3,15 @@ import { Link } from "react-router-dom";
 export default function Navbar() {
   return (
     <nav style={styles.nav}>
-      <h2 style={styles.logo}>VirtualPet 🐾</h2>
+      <Link to="/" style={{ textDecoration: 'none' }}>
+        <h2 style={styles.logo}>VirtualPet 🐾</h2>
+      </Link>
 
       <div style={styles.links}>
-        <Link to="/" style={styles.link}>Inicio</Link>
+        <Link to="/"         style={styles.link}>Inicio</Link>
         <Link to="/products" style={styles.link}>Productos</Link>
-        <Link to="/cart" style={styles.link}>Carrito</Link>
-        <Link to="/login" style={styles.link}>Login</Link>
+        <Link to="/cart"     style={styles.link}>Carrito</Link>
+        <Link to="/login"    style={styles.link}>Login</Link>
       </div>
     </nav>
   );
@@ -24,16 +26,15 @@ const styles = {
     background: "#2D6A4F",
     color: "white",
   },
-
   logo: {
     margin: 0,
+    color: "white",
+    cursor: "pointer",
   },
-
   links: {
     display: "flex",
     gap: "20px",
   },
-
   link: {
     color: "white",
     textDecoration: "none",

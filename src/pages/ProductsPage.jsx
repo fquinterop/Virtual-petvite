@@ -1,9 +1,54 @@
 // pages/ProductsPage.jsx
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { productService } from '../api/productService'
 import { useCart } from '../context/CartContext'
 import Swal from 'sweetalert2'
+
+// Placeholders por categoría
+const CAT_PLACEHOLDER = {
+  snacks:     { emoji: '🦴', bg: 'linear-gradient(135deg, #FFF3E0, #FFE0B2)' },
+  juguetes:   { emoji: '🧸', bg: 'linear-gradient(135deg, #E8F5E9, #C8E6C9)' },
+  aseo:       { emoji: '🛁', bg: 'linear-gradient(135deg, #E3F2FD, #BBDEFB)' },
+  collares:   { emoji: '🐕', bg: 'linear-gradient(135deg, #F3E5F5, #E1BEE7)' },
+  comederos:  { emoji: '🥣', bg: 'linear-gradient(135deg, #E0F7FA, #B2EBF2)' },
+  transporte: { emoji: '🧳', bg: 'linear-gradient(135deg, #FBE9E7, #FFCCBC)' },
+  default:    { emoji: '🐾', bg: 'linear-gradient(135deg, #F0F4F0, #E0E8E0)' },
+}
+
+function ProductImage({ product }) {
+  const ph = CAT_PLACEHOLDER[product.categoryId] || CAT_PLACEHOLDER.default
+  if (product.image) {
+    return (
+      <div style={{ height: 160, overflow: 'hidden', position: 'relative' }}>
+        <img
+          src={product.image}
+          alt={product.name}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          onError={(e) => {
+            e.currentTarget.style.display = 'none'
+            e.currentTarget.nextSibling.style.display = 'flex'
+          }}
+        />
+        <div style={{
+          display: 'none', background: ph.bg,
+          height: '100%', position: 'absolute', top: 0, left: 0, right: 0,
+          alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem',
+        }}>
+          {ph.emoji}
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div style={{
+      background: ph.bg, height: 160,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem',
+    }}>
+      {ph.emoji}
+    </div>
+  )
+}
 
 export default function ProductsPage() {
   const [products, setProducts]       = useState([])
@@ -11,7 +56,14 @@ export default function ProductsPage() {
   const [loading, setLoading]         = useState(true)
   const [search, setSearch]           = useState('')
   const [selectedCat, setSelectedCat] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
   const { addItem } = useCart()
+
+  // Leer ?cat= de la URL al cargar
+  useEffect(() => {
+    const catFromUrl = searchParams.get('cat')
+    if (catFromUrl) setSelectedCat(catFromUrl)
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,7 +73,7 @@ export default function ProductsPage() {
           productService.getCategories(),
         ])
         setProducts(prods)
-        setCategories(cats)
+        setCategories(cats.filter((c) => c.id !== 'food'))
       } catch {
         Swal.fire({ title: 'Error', text: 'No se pudieron cargar los productos.', icon: 'error' })
       } finally {
@@ -30,6 +82,12 @@ export default function ProductsPage() {
     }
     fetchData()
   }, [])
+
+  const handleCatChange = (value) => {
+    setSelectedCat(value)
+    if (value) setSearchParams({ cat: value })
+    else setSearchParams({})
+  }
 
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
@@ -55,16 +113,17 @@ export default function ProductsPage() {
         Encuentra todo lo que tu mascota necesita
       </p>
 
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
+      {/* Filtros */}
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
         <input
           type="text" className="form-control"
           placeholder="🔍 Buscar productos…"
           value={search} onChange={(e) => setSearch(e.target.value)}
-          style={{ maxWidth: '320px' }}
+          style={{ maxWidth: '300px' }}
         />
         <select
           className="form-control" value={selectedCat}
-          onChange={(e) => setSelectedCat(e.target.value)}
+          onChange={(e) => handleCatChange(e.target.value)}
           style={{ maxWidth: '220px' }}
         >
           <option value="">Todas las categorías</option>
@@ -73,6 +132,11 @@ export default function ProductsPage() {
           ))}
         </select>
       </div>
+
+      {/* Contador */}
+      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
+        {filtered.length} producto{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}
+      </p>
 
       {filtered.length === 0 ? (
         <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', marginTop: '3rem' }}>
@@ -94,24 +158,26 @@ export default function ProductsPage() {
               onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)' }}
               onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)' }}
             >
-              <div style={{ background: '#f0f4f0', height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem' }}>
-                {product.image
-                  ? <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : '🐾'}
-              </div>
-              <div style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--color-primary)', fontWeight: 600, textTransform: 'uppercase' }}>
+              <ProductImage product={product} />
+
+              <div style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <span style={{
+                  fontSize: '0.72rem', color: 'var(--color-primary)',
+                  fontWeight: 700, textTransform: 'uppercase',
+                }}>
                   {product.category || 'General'}
                 </span>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, lineHeight: 1.3 }}>{product.name}</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', flex: 1 }}>
-                  {product.description?.slice(0, 60)}…
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.3, margin: 0 }}>
+                  {product.name}
+                </h3>
+                <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', flex: 1, margin: 0 }}>
+                  {product.description?.slice(0, 65)}…
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-primary-dark)' }}>
+                  <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-primary-dark)' }}>
                     ${product.price?.toLocaleString()}
                   </span>
-                  <Link to={`/products/${product.id}`} style={{ fontSize: '0.8rem' }}>Ver detalle</Link>
+                  <Link to={`/products/${product.id}`} style={{ fontSize: '0.8rem' }}>Ver detalle →</Link>
                 </div>
                 <button
                   className="btn btn-primary"
