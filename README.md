@@ -1,4 +1,4 @@
-Proyecto fina
+Proyecto final
 
 
 Marcela Sepulveda
