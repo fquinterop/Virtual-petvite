@@ -16,23 +16,19 @@ export default function AdminLoginPage() {
     e.preventDefault()
     setError(''); setLoading(true)
 
-    // ── TEMPORAL: saltar login para ver el panel sin backend ──
-    adminLogin('fake-token', { username: 'admin', rol: 'SUPER_ADMIN' })
-    navigate('/admin/dashboard')
-    setLoading(false)
-    return
+   
 
     // ── REAL: descomentar cuando el backend esté corriendo ──
-    // try {
-    //   const res = await adminAuthService.login(form.username, form.password)
-    //   const { token, username, rol } = res.data
-    //   adminLogin(token, { username, rol })
-    //   navigate('/admin/dashboard')
-    // } catch (err) {
-    //   setError(err.response?.data?.mensaje || 'Credenciales incorrectas')
-    // } finally {
-    //   setLoading(false)
-    // }
+    try {
+      const res = await adminAuthService.login(form.username, form.password)
+      const { token, username, rol } = res.data
+      adminLogin(token, { username, rol })
+      navigate('/admin/dashboard')
+    } catch (err) {
+      setError(err.response?.data?.mensaje || 'Credenciales incorrectas')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
