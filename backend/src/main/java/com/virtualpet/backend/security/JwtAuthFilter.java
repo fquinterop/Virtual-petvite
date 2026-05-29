@@ -32,9 +32,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String subject = jwtUtils.getSubject(token);
             String role    = jwtUtils.getRole(token);
 
+            // El rol ya viene con prefijo ROLE_ desde JwtUtils (ej: "ROLE_ADMIN", "ROLE_CLIENTE")
+            String authority = role.startsWith("ROLE_") ? role.toUpperCase() : "ROLE_" + role.toUpperCase();
             var auth = new UsernamePasswordAuthenticationToken(
                     subject, null,
-                    List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
+                    List.of(new SimpleGrantedAuthority(authority))
             );
             SecurityContextHolder.getContext().setAuthentication(auth);
         }

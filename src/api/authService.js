@@ -1,40 +1,29 @@
-// api/authService.js — versión local sin backend
-// Credenciales de admin: admin@virtualpet.co / admin123
+// src/api/authService.js
+// Conecta con el backend Spring Boot para registro y login de clientes
 
-const ADMIN_USER = {
-  id: 1,
-  name: 'Administrador',
-  email: 'admin@virtualpet.co',
-  role: 'admin',
-}
+import axios from 'axios'
 
-const ADMIN_PASSWORD = 'admin123'
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+
+const api = axios.create({ baseURL: BASE })
 
 export const authService = {
-  login: async ({ email, password }) => {
-    // Simula delay de red
-    await new Promise((r) => setTimeout(r, 600))
 
-    if (
-      email.trim().toLowerCase() === ADMIN_USER.email &&
-      password === ADMIN_PASSWORD
-    ) {
-      return {
-        user: ADMIN_USER,
-        token: 'local-admin-token',
-      }
-    }
-
-    // Lanza error como lo haría axios
-    const err = new Error('Credenciales inválidas')
-    err.response = { data: { message: 'Credenciales inválidas. Intenta de nuevo.' } }
-    throw err
+  // POST /clientes/registro
+  register: async ({ name, email, password }) => {
+    const { data } = await api.post('/clientes/registro', {
+      nombre: name,
+      email,
+      password,
+    })
+    // Devuelve { token, user: { id, name, email, role } }
+    return data
   },
 
-  register: async () => {
-    const err = new Error('Registro deshabilitado')
-    err.response = { data: { message: 'El registro está deshabilitado en esta versión.' } }
-    throw err
+  // POST /clientes/login
+  login: async ({ email, password }) => {
+    const { data } = await api.post('/clientes/login', { email, password })
+    return data
   },
 
   logout: async () => true,

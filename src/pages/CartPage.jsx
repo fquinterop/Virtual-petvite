@@ -47,11 +47,17 @@ export default function CartPage() {
     setLoading(true)
     try {
       const payload = {
-        items: items.map(({ id, name, price, quantity }) => ({ productId: id, name, price, quantity })),
-        total: totalPrice,
-        createdAt: new Date().toISOString(),
-        status: 'pending',
-        cliente: { ...form },
+        nombreCliente:    `${form.nombre} ${form.apellido}`.trim(),
+        emailCliente:     form.email,
+        telefonoCliente:  form.telefono,
+        direccionEntrega: `${form.direccion}, ${form.ciudad}`.trim(),
+        notas:            form.notas || '',
+        items: items.map(({ id, name, price, quantity }) => ({
+          productoId:     id,
+          nombreProducto: name,
+          precioUnitario: price,
+          cantidad:       quantity,
+        })),
       }
       await orderService.create(payload)
       clearCart()
